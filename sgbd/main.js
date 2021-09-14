@@ -1,9 +1,15 @@
+const DatabaseError = function(statement, message) {
+    this.statement = statement;
+    this.message = message;
+}
+
 const database = {
     tables: {},
     execute(command) {
         if (command.startsWith("create table")) {
-            this._createTable(command)
+            return this._createTable(command)
         }
+        throw new DatabaseError(command, `Syntax error: "${command}"`)
     },
     _createTable(command) {
         let regexToGetTablename = /create table\s(\w+)\s\((.+)\)/
@@ -21,5 +27,11 @@ const database = {
     }
 };
 
-database.execute("create table author (id number, name string, age number, city string, state string, country string)");
-console.log(JSON.stringify(database, undefined, " "))
+
+try {
+    database.execute("create table author (id number, name string, age number, city string, state string, country string)");
+    console.log(JSON.stringify(database, undefined, " "))
+    database.execute("select id, name from author");
+} catch(err) {
+    console.log(err.message);
+}
