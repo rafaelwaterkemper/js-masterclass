@@ -45,6 +45,9 @@ console.log(perl.paradigm)
 let Person = function(name, age) {
     this.name = name;
     this.age = age;
+    this.printName = () => {
+        console.log(this.name)
+    }
 }
 
 let p1 = new Person("Rafa", 12);
@@ -68,3 +71,21 @@ console.log(p1Factory.otherMethodObject())
 let p2Factory = {name: "Dirceu", age: 51}
 console.log(p2Factory.otherMethodObject())
 console.log(p2.otherMethodObject())
+
+//test method definition
+p1.printName()
+
+//Factory function
+let criarPerson = function(name, age) {
+    return {
+        name,
+        age,
+        printName() {
+            console.log(this.name)
+        }
+    }
+}
+
+let andre = criarPerson("Andre", 23)
+let newInvoke = andre.printName.bind(p1)
+newInvoke()
