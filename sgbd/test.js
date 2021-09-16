@@ -1,10 +1,23 @@
-let command = "database.execute('insert into author (id, name, age) values (1, Douglas Crockford, 62)'";
-let regexToInsert = /insert into\s(\w+)\s?\((.+)\)\s?values\s?\((.+)\)/
+let command = "select name, age from author where id = 1";
+let regexToInsert = /select\s(.+)\sfrom\s([a-z]+)(\swhere\s(.+))?/
 let result = regexToInsert.exec(command)
-let tableName = result[1]
-let fields = result[2].replace(/\s/g, "").split(",")
-console.log(result[3])
-let values = result[3].replace(/\s/g, "").split(",")
+let columns = result[1].split(",")
+let tableName = result[2]
+let where;
+if (result[3]) {
+    where = result[3].split(" = ")
+    console.log(result[4])
+}
+console.log(columns)
 console.log(tableName)
-console.log(fields)
-console.log(values)
+console.log(where)
+
+// let command = "select name, age from author where id = 1";
+// let regexToInsert = /select\s(.+)\sfrom\s([a-z]+)\swhere\s(.+)/
+// let result = regexToInsert.exec(command)
+// let columns = result[1].split(",")
+// let tableName = result[2]
+// let where = result[3].split(" = ")
+// console.log(columns)
+// console.log(tableName)
+// console.log(where)

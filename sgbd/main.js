@@ -12,6 +12,10 @@ const database = {
         if (command.startsWith("insert")) {
             return this._insert(command)
         }
+
+        if (command.startsWith("select")) {
+            return this._select(command)
+        }
         throw new DatabaseError(command, `Syntax error: "${command}"`)
     },
     _createTable(command) {
@@ -39,6 +43,27 @@ const database = {
             row[columns[idx]] = values[idx]
         }
         this.tables[tableName].data.push(row)
+    },
+    _select(command) {
+        let regexToInsert = /select\s(.+)\sfrom\s([a-z]+)(?: where\s(.+))?/
+        let [,columns,tableName,where] = regexToInsert.exec(command);
+        columns = columns.split(", ");
+
+        if (!where) {
+            return this.tables[tableName].data.map(row => this.mapSelect(row, columns))
+        }
+
+        where = where.split(" = ")
+        return this.tables[tableName].data
+            .filter(row => {
+                return row[where[0]] === where[1]
+            })
+            .map(row => this.mapSelect(row, columns))
+    },
+    mapSelect(row, columns) {
+        let doc = {};
+        columns.forEach(column => doc[column] = row[column])
+        return doc;
     }
 };
 
@@ -47,8 +72,11 @@ try {
     database.execute("insert into author (id, name, age) values (1, Douglas Crockford, 62)");
     database.execute("insert into author (id, name, age) values (2, Linus Torvalds, 47)");
     database.execute("insert into author (id, name, age) values (3, Martin Fowler, 54)");
-    console.log(JSON.stringify(database, undefined, " "))
-    database.execute("select id, name from author");
+    database.execute("insert into author (id, name, age) values (4, Nathan o Brabo, 24)");
+    let results = database.execute("select name, age from author");
+    let resultsWithWhere = database.execute("select name from author where id = 2");
+    console.log("Resultados do select: ", results)
+    console.log("Resultados do select with where: ", resultsWithWhere)
 } catch (err) {
     console.log(err.message);
 }
