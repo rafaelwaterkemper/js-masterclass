@@ -6,6 +6,7 @@ const DatabaseError = function (statement, message) {
 const database = {
     tables: {},
     execute(command) {
+
         if (command.startsWith("create table")) {
             return this._createTable(command)
         }
@@ -15,6 +16,10 @@ const database = {
 
         if (command.startsWith("select")) {
             return this._select(command)
+        }
+
+        if (command.startsWith("delete")) {
+            return this._delete(command)
         }
         throw new DatabaseError(command, `Syntax error: "${command}"`)
     },
@@ -45,8 +50,8 @@ const database = {
         this.tables[tableName].data.push(row)
     },
     _select(command) {
-        let regexToInsert = /select\s(.+)\sfrom\s([a-z]+)(?: where\s(.+))?/
-        let [,columns,tableName,where] = regexToInsert.exec(command);
+        let regexToSelect = /select\s(.+)\sfrom\s([a-z]+)(?: where\s(.+))?/
+        let [, columns, tableName, where] = regexToSelect.exec(command);
         columns = columns.split(", ");
 
         if (!where) {
@@ -59,6 +64,21 @@ const database = {
                 return row[where[0]] === where[1]
             })
             .map(row => this.mapSelect(row, columns))
+    },
+    _delete(command) {
+        let [, tableName, where] = command.match(/delete from ([a-z]+)(?: where (.*))?/);
+        if (where) {
+            let [column, value] = where.split(" = ");
+            let index = this.tables[tableName].data.findIndex(row => row[column] === value);
+
+            if (index === -1) {
+                console.log("No data to delete")
+                return;
+            }
+            this.tables[tableName].data.splice(index, 1)
+        } else {
+            this.tables[tableName].data = []
+        }
     },
     mapSelect(row, columns) {
         let doc = {};
@@ -73,10 +93,14 @@ try {
     database.execute("insert into author (id, name, age) values (2, Linus Torvalds, 47)");
     database.execute("insert into author (id, name, age) values (3, Martin Fowler, 54)");
     database.execute("insert into author (id, name, age) values (4, Nathan o Brabo, 24)");
+    database.execute("delete from author where id = 2");
     let results = database.execute("select name, age from author");
     let resultsWithWhere = database.execute("select name from author where id = 2");
-    console.log("Resultados do select: ", results)
-    console.log("Resultados do select with where: ", resultsWithWhere)
+    console.log(results)
+    console.log(resultsWithWhere)
+    database.execute("delete from author");
+    results = database.execute("select name, age from author");
+    console.log(results)
 } catch (err) {
     console.log(err.message);
 }
