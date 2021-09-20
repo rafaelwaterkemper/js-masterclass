@@ -1,33 +1,22 @@
-const DatabaseError = function (statement, message) {
-    this.statement = statement;
-    this.message = message;
-}
+import { Parser } from './parser.mjs'
 
 const database = {
+    parser: new Parser(),
     tables: {},
-    execute(command) {
+    execute(statement) {
+        try {
+            let { command, parsedStatement } = this.parser.parse(statement)
 
-        if (command.startsWith("create table")) {
-            return this._createTable(command)
+            if (command) {
+                return this[`_${command}`](parsedStatement)
+            }
+        } catch (error) {
+            throw error;
         }
-        if (command.startsWith("insert")) {
-            return this._insert(command)
-        }
-
-        if (command.startsWith("select")) {
-            return this._select(command)
-        }
-
-        if (command.startsWith("delete")) {
-            return this._delete(command)
-        }
-        throw new DatabaseError(command, `Syntax error: "${command}"`)
     },
-    _createTable(command) {
-        let regexToGetTablename = /create table\s(\w+)\s\((.+)\)/
-        let result = regexToGetTablename.exec(command)
-        let tableName = result[1]
-        let columns = result[2].replace(/, /g, ";").split(";")
+    _createTable(parsed) {
+        let [,tableName,columns] = parsed
+        columns = columns.replace(/, /g, ";").split(";")
         this.tables[tableName] = {
             columns: {},
             data: []
@@ -37,21 +26,18 @@ const database = {
             this.tables[tableName].columns[name] = type;
         }
     },
-    _insert(command) {
-        let regexToInsert = /insert into\s(\w+)\s?\((.+)\)\s?values\s?\((.+)\)/
-        let result = regexToInsert.exec(command)
-        let tableName = result[1]
-        let columns = result[2].split(", ")
-        let values = result[3].split(", ")
+    _insert(parsed) {
+        let [,tableName,columns,values] = parsed
+        columns = columns.split(", ")
+        values = values.split(", ")
         let row = {};
         for (let idx in columns) {
             row[columns[idx]] = values[idx]
         }
         this.tables[tableName].data.push(row)
     },
-    _select(command) {
-        let regexToSelect = /select\s(.+)\sfrom\s([a-z]+)(?: where\s(.+))?/
-        let [, columns, tableName, where] = regexToSelect.exec(command);
+    _select(parsed) {
+        let [, columns, tableName, where] = parsed
         columns = columns.split(", ");
 
         if (!where) {
@@ -65,8 +51,8 @@ const database = {
             })
             .map(row => this.mapSelect(row, columns))
     },
-    _delete(command) {
-        let [, tableName, where] = command.match(/delete from ([a-z]+)(?: where (.*))?/);
+    _delete(parsed) {
+        let [, tableName, where] = parsed
         if (where) {
             let [column, value] = where.split(" = ");
             let index = this.tables[tableName].data.findIndex(row => row[column] === value);
