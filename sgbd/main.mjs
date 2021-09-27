@@ -1,8 +1,11 @@
 import { Parser } from './parser.mjs'
 
-const database = {
-    parser: new Parser(),
-    tables: {},
+class Database {
+    constructor() {
+        this.parser = new Parser();
+        this.tables = {};
+    }
+    
     execute(statement) {
         try {
             let { command, parsedStatement } = this.parser.parse(statement)
@@ -13,7 +16,7 @@ const database = {
         } catch (error) {
             throw error;
         }
-    },
+    }
     _createTable(parsed) {
         let [,tableName,columns] = parsed
         columns = columns.replace(/, /g, ";").split(";")
@@ -25,7 +28,7 @@ const database = {
             const [name, type] = column.split(" ");
             this.tables[tableName].columns[name] = type;
         }
-    },
+    }
     _insert(parsed) {
         let [,tableName,columns,values] = parsed
         columns = columns.split(", ")
@@ -35,7 +38,7 @@ const database = {
             row[columns[idx]] = values[idx]
         }
         this.tables[tableName].data.push(row)
-    },
+    }
     _select(parsed) {
         let [, columns, tableName, where] = parsed
         columns = columns.split(", ");
@@ -50,7 +53,7 @@ const database = {
                 return row[where[0]] === where[1]
             })
             .map(row => this.mapSelect(row, columns))
-    },
+    }
     _delete(parsed) {
         let [, tableName, where] = parsed
         if (where) {
@@ -65,7 +68,7 @@ const database = {
         } else {
             this.tables[tableName].data = []
         }
-    },
+    }
     mapSelect(row, columns) {
         let doc = {};
         columns.forEach(column => doc[column] = row[column])
@@ -74,6 +77,7 @@ const database = {
 };
 
 try {
+    let database = new Database();
     database.execute("create table author (id number, name string, age number, city string, state string, country string)");
     database.execute("insert into author (id, name, age) values (1, Douglas Crockford, 62)");
     database.execute("insert into author (id, name, age) values (2, Linus Torvalds, 47)");
