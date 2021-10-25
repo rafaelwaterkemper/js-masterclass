@@ -1,0 +1,10 @@
+let { print, changeTest } = require('./cached')
+
+print("rafa")
+// second.printS("Guga")
+changeTest("final")
+let second = require('./second-require')
+let { printUpperCase } = require('./cached')
+print("rafa")
+printUpperCase("rafa")
+second.printS("Guga")
