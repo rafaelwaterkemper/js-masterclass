@@ -1,5 +1,4 @@
 import { print, changeTest } from './cached.mjs'
-
 print("rafa")
 // second.printS("Guga")
 changeTest("final")
@@ -8,3 +7,5 @@ import { printUpperCase } from './cached.mjs'
 print("rafa")
 printUpperCase("rafa")
 printS("Guga")
+import second from './second-require.mjs'
+console.log(second)

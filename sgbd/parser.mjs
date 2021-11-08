@@ -1,8 +1,4 @@
-class CommandNotFound {
-    constructor(statement) {
-        this.message = `Command not found: ${statement}`;
-    }
-}
+import { CommandNotFound } from './databaseError.mjs'
 
 export class Parser {
     constructor() {
